@@ -24,15 +24,54 @@ function statusPorcentagem(atual, ideal) {
   const base = numero(ideal);
   const qtd = numero(atual);
 
-  if (base <= 0) return { porcentagem: 0, cor: "#9ca3af", status: "Sem base" };
+  if (base <= 0) {
+    return {
+      porcentagem: 0,
+      cor: "#9ca3af",
+      status: "SEM_BASE",
+      notificacao: null,
+    };
+  }
 
   const porcentagem = (qtd / base) * 100;
 
-  if (porcentagem >= 100) return { porcentagem, cor: "#2563eb", status: "100%" };
-  if (porcentagem > 50) return { porcentagem, cor: "#22c55e", status: "OK" };
-  if (porcentagem > 20) return { porcentagem, cor: "#f59e0b", status: "Atenção" };
+  // azul
+  if (porcentagem >= 100) {
+    return {
+      porcentagem,
+      cor: "#2563eb",
+      status: "CHEIO",
+      notificacao: null,
+    };
+  }
 
-  return { porcentagem, cor: "#ef4444", status: "Baixo" };
+  // verde
+  if (porcentagem > 50) {
+    return {
+      porcentagem,
+      cor: "#22c55e",
+      status: "OK",
+      notificacao: null,
+    };
+  }
+
+  // laranja
+  if (porcentagem > 20) {
+    return {
+      porcentagem,
+      cor: "#f59e0b",
+      status: "ATENCAO",
+      notificacao: "ATENCAO",
+    };
+  }
+
+  // vermelho
+  return {
+    porcentagem,
+    cor: "#ef4444",
+    status: "CRITICO",
+    notificacao: "CRITICO",
+  };
 }
 
 function diasAte(data) {
@@ -696,13 +735,18 @@ app.post("/notifications/check", async (req, res) => {
         const ideal = limiteLocal?.estoqueIdeal || produto.estoqueIdeal || 0;
         const status = statusPorcentagem(quantidade, ideal);
 
-        if (status.status === "Atenção" || status.status === "Baixo") {
+        if (status.notificacao) {
           await criarOuAtualizarNotificacao({
             chave: `estoque-${produto.id}-${local}-${status.status}`,
             tipo: "ESTOQUE",
-            titulo: `Estoque ${status.status}: ${produto.nome}`,
-            mensagem: `${produto.nome} no estoque ${local} está com ${quantidade} unidade(s). Ideal: ${ideal}.`,
-            status: status.status,
+            titulo:
+  status.notificacao === "ATENCAO"
+    ? `Estoque Atenção: ${produto.nome}`
+    : `Estoque Baixo: ${produto.nome}`,
+
+mensagem: `${produto.nome} no estoque ${local} está com ${quantidade} unidade(s). Ideal: ${ideal}.`,
+
+status: status.notificacao,
           });
           criadas++;
         }
@@ -714,11 +758,14 @@ app.post("/notifications/check", async (req, res) => {
       const diff = diasAte(entrada.validade);
 
       if (diff <= 10) {
-        const status = diff <= 0 ? "Vencido" : "Próximo do vencimento";
+        const status = diff <= 0 ? "CRITICO" : "ATENCAO";
         await criarOuAtualizarNotificacao({
           chave: `validade-${entrada.id}-${status}`,
           tipo: "VALIDADE",
-          titulo: `${status}: ${entrada.produto}`,
+          titulo:
+  status === "CRITICO"
+    ? `Vencido: ${entrada.produto}`
+    : `Próximo do vencimento: ${entrada.produto}`,
           mensagem:
             diff <= 0
               ? `${entrada.produto} venceu em ${new Date(entrada.validade).toLocaleDateString("pt-BR")}.`
@@ -728,6 +775,14 @@ app.post("/notifications/check", async (req, res) => {
         criadas++;
       }
     }
+
+    await criarOuAtualizarNotificacao({
+  chave: "app-teste",
+  tipo: "APP",
+  titulo: "Novo pedido Shopify",
+  mensagem: "Pedido #1001 recebido do Shopify.",
+  status: "APP",
+});
 
     res.json({ success: true, criadas });
   } catch (err) {
