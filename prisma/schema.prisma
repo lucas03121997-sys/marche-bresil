@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  OPERADOR
+}
+
+model Stock {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  fixed     Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ProductGroup {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  codigo       String
+  grupo        String
+  medida       String
+  estoqueIdeal Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  cnpj      String
+  telefone  String
+  email     String
+  createdAt DateTime @default(now())
+}
+
+model Entry {
+  id             Int       @id @default(autoincrement())
+  produto        String
+  fornecedor     String
+  notaFiscal     String
+  quantidade     Int
+  valorCompra    Float
+  valorVenda     Float
+  estoqueDestino String
+  validade       DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+model Reposition {
+  id          Int      @id @default(autoincrement())
+  produto     String
+  quantidade  Int
+  origem      String
+  destino     String
+  createdAt   DateTime @default(now())
+}
+
+model Sale {
+  id            Int      @id @default(autoincrement())
+  codigoVenda   String   @default("")
+  produto       String
+  codigo        String
+  quantidade    Int
+  valor         Float
+  estoqueOrigem String
+  createdAt     DateTime @default(now())
+}
+
+model ProductStockLimit {
+  id           Int      @id @default(autoincrement())
+  produto      String
+  estoque      String
+  estoqueIdeal Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senha     String
+  role      UserRole @default(OPERADOR)
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  chave     String   @unique
+  tipo      String
+  titulo    String
+  mensagem  String
+  status    String
+  lida      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
