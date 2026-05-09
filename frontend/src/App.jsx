@@ -178,6 +178,14 @@ function translateStock(nome, language) {
   return nomes[nome]?.[language] || nome;
 }
 
+function corNotificacao(status) {
+  if (status === "APP") return "#2563eb";
+  if (status === "ATENCAO") return "#f59e0b";
+  if (status === "CRITICO") return "#ef4444";
+
+  return "#6b7280";
+}
+
 
 function Login({ onLogin }) {
   const t = texts.pt;
@@ -2022,8 +2030,11 @@ function Layout({ data, actions, t, language, setLanguage, currentUser, onLogout
 
   const marcarLida = async (id) => {
     await axios.put(`${API}/notifications/${id}/read`);
+
     actions.setNotificacoes(
-      data.notificacoes.map((n) => (n.id === id ? { ...n, lida: true } : n))
+      data.notificacoes.map((n) =>
+        n.id === id ? { ...n, lida: true } : n
+      )
     );
   };
 
@@ -2041,7 +2052,11 @@ function Layout({ data, actions, t, language, setLanguage, currentUser, onLogout
           <h2>{t.appName}</h2>
         </div>
 
-        <select style={styles.languageSelect} value={language} onChange={(e) => setLanguage(e.target.value)}>
+        <select
+          style={styles.languageSelect}
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
           <option value="pt">PT-BR</option>
           <option value="en">EN-CA</option>
           <option value="fr">FR-CA</option>
@@ -2069,29 +2084,57 @@ function Layout({ data, actions, t, language, setLanguage, currentUser, onLogout
 
         <Link style={styles.link} to="/settings">Configurações</Link>
 
-        <button style={styles.cancelButton} onClick={onLogout}>Sair</button>
+        <button style={styles.cancelButton} onClick={onLogout}>
+          Sair
+        </button>
       </aside>
 
       <main style={styles.main}>
         <div style={styles.topBar}>
-          <button style={styles.notificationButton} onClick={() => setShowNotifications(!showNotifications)}>
+          <button
+            style={styles.notificationButton}
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
             🔔
-            {unread > 0 && <span style={styles.notificationBadge}>{unread}</span>}
+            {unread > 0 && (
+              <span style={styles.notificationBadge}>{unread}</span>
+            )}
           </button>
-          <button style={styles.editButton} onClick={atualizarNotificacoes}>Atualizar alertas</button>
+
+          <button style={styles.editButton} onClick={atualizarNotificacoes}>
+            Atualizar alertas
+          </button>
         </div>
 
         {showNotifications && (
           <div style={styles.notificationPanel}>
             <h3>Notificações</h3>
-            {data.notificacoes.length === 0 && <p>Nenhum alerta no momento.</p>}
+
+            {data.notificacoes.length === 0 && (
+              <p>Nenhum alerta no momento.</p>
+            )}
+
             {data.notificacoes.map((n) => (
-              <div key={n.id} style={{ ...styles.notificationCard, opacity: n.lida ? 0.55 : 1 }}>
+              <div
+                key={n.id}
+                style={{
+                ...styles.notificationCard,
+                borderLeft: `6px solid ${corNotificacao(n.status)}`,
+                opacity: n.lida ? 0.55 : 1,
+                }}
+              >
                 <strong>{n.titulo}</strong>
                 <p>{n.mensagem}</p>
-                <small>{new Date(n.createdAt).toLocaleString("pt-BR")}</small>
+
+                <small>
+                  {new Date(n.createdAt).toLocaleString("pt-BR")}
+                </small>
+
                 {!n.lida && (
-                  <button style={styles.editButton} onClick={() => marcarLida(n.id)}>
+                  <button
+                    style={{ ...styles.editButton, marginLeft: "10px" }}
+                    onClick={() => marcarLida(n.id)}
+                  >
                     Marcar como lida
                   </button>
                 )}
@@ -2103,6 +2146,7 @@ function Layout({ data, actions, t, language, setLanguage, currentUser, onLogout
         <Routes>
           <Route path="/sales" element={<Sales data={data} actions={actions} t={t} language={language} />} />
           <Route path="/sales-history" element={<SalesHistory data={data} actions={actions} t={t} language={language} />} />
+
           {isAdmin && <Route path="/stock" element={<Stock data={data} actions={actions} t={t} language={language} />} />}
           {isAdmin && <Route path="/product-groups" element={<ProductGroups data={data} actions={actions} t={t} />} />}
           {isAdmin && <Route path="/products" element={<Products data={data} actions={actions} t={t} language={language} />} />}
@@ -2111,8 +2155,23 @@ function Layout({ data, actions, t, language, setLanguage, currentUser, onLogout
           {isAdmin && <Route path="/repositions" element={<Repositions data={data} actions={actions} t={t} language={language} />} />}
           {isAdmin && <Route path="/reports" element={<Reports data={data} t={t} language={language} />} />}
           {isAdmin && <Route path="/dashboard" element={<Dashboard data={data} t={t} />} />}
-          <Route path="/settings" element={<Settings data={data} actions={actions} currentUser={currentUser} onLogout={onLogout} />} />
-          <Route path="*" element={<Sales data={data} actions={actions} t={t} language={language} />} />
+
+          <Route
+            path="/settings"
+            element={
+              <Settings
+                data={data}
+                actions={actions}
+                currentUser={currentUser}
+                onLogout={onLogout}
+              />
+            }
+          />
+
+          <Route
+            path="*"
+            element={<Sales data={data} actions={actions} t={t} language={language} />}
+          />
         </Routes>
       </main>
     </div>
@@ -2270,12 +2329,11 @@ chartLegend: {
     boxShadow: "0 1px 4px #ddd",
   },
   notificationCard: {
-    background: "#fff",
-    borderLeft: "5px solid #f59e0b",
-    padding: "12px",
-    borderRadius: "8px",
-    marginBottom: "10px",
-  },
+  background: "#fff",
+  padding: "12px",
+  borderRadius: "8px",
+  marginBottom: "10px",
+},
 };
 
 export default App;
