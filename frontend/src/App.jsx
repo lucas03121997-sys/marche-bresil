@@ -181,8 +181,8 @@ function translateStock(nome, language) {
 
 function Login({ onLogin }) {
   const t = texts.pt;
-  const [email, setEmail] = React.useState("admin@admin.com");
-  const [senha, setSenha] = React.useState("123456");
+  const [email, setEmail] = React.useState("");
+  const [senha, setSenha] = React.useState("");
 
   const entrar = async () => {
     try {
