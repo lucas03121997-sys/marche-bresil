@@ -105,3 +105,42 @@ model Notification {
   lida      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model IntegrationConfig {
+  id        Int      @id @default(autoincrement())
+  provider  String
+  ativo     Boolean  @default(false)
+  apiKey    String?
+  apiSecret String?
+  storeUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ExternalOrder {
+  id              Int      @id @default(autoincrement())
+  provider        String
+  externalId      String
+  codigoPedido    String
+  clienteNome     String?
+  status          String   @default("NOVO")
+  total           Float    @default(0)
+  estoqueOrigem   String?
+  rawData         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  itens ExternalOrderItem[]
+}
+
+model ExternalOrderItem {
+  id              Int      @id @default(autoincrement())
+  externalOrderId Int
+  produto         String
+  codigo          String?
+  quantidade      Int
+  valor           Float
+  createdAt       DateTime @default(now())
+
+  order ExternalOrder @relation(fields: [externalOrderId], references: [id], onDelete: Cascade)
+}
